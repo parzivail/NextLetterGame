@@ -28,10 +28,10 @@ namespace NextLetterGame
         {
             Console.ForegroundColor = InfoColor;
 
-            // Load words from a local copy of http://norvig.com/ngrams/count_1w.txt
+            // Load words from a local copy of https://github.com/dwyl/english-words
             Console.WriteLine("Loading dictionary file.");
 
-            // Figure out how long it takes to load
+            // Create and start stopwatch
             var stopwatch = new Stopwatch();
             stopwatch.Start();
 
@@ -48,6 +48,7 @@ namespace NextLetterGame
             Console.WriteLine($"Loaded {_words.Count} words in {stopwatch.Elapsed}.");
             Console.WriteLine($"Write '.' to quit.");
 
+            // Keep a record of whether or not we're pruning words
             var pruneStartWithRealWord = true;
 
             while (true)
@@ -55,6 +56,7 @@ namespace NextLetterGame
                 Console.ForegroundColor = InputColor;
                 Console.Write("> ");
 
+                // Attempt to wait for and read the user's input
                 var readLine = Console.ReadLine();
 
                 // Catostrophic failure
@@ -79,16 +81,19 @@ namespace NextLetterGame
                 switch (input)
                 {
                     case "~p":
+                        // Prune enable command
                         pruneStartWithRealWord = true;
                         Console.ForegroundColor = InfoColor;
                         Console.WriteLine("Enabled pruning of words that start with other english words.");
                         continue;
                     case "~np":
+                        // Prune disable command
                         pruneStartWithRealWord = false;
                         Console.ForegroundColor = InfoColor;
                         Console.WriteLine("Disabled pruning of words that start with other english words.");
                         continue;
                     default:
+                        // Skip if the user's input is less than 3 characters because of the search times
                         if (input.Length < 3)
                         {
                             Console.ForegroundColor = ErrorColor;
@@ -109,7 +114,7 @@ namespace NextLetterGame
         /// <param name="prune">True to prune words that start with other similar english words</param>
         private static void PrintBestMatches(string word, bool prune)
         {
-            // Sort out which words begin with the given fragment and are not 3 letters long
+            // Sort out which words begin with the given fragment and are over 3 letters long (because pruning is greedy)
             var foundWords = new List<string>(_words.Where(pair => pair.StartsWith(word) && pair.Length > 3));
 
             // Order by length -- the longer the word, the better for the game, after all!
@@ -160,6 +165,7 @@ namespace NextLetterGame
                 return false;
             }
 
+            // Init the words list
             _words = new List<string>();
 
             // Load the file into memory
@@ -172,7 +178,7 @@ namespace NextLetterGame
                     var currentLine = sr.ReadLine();
 
                     // End of stream or catostrophic failure
-                    if (currentLine == null) return _words.Count != 0;
+                    if (currentLine == null) return false;
 
                     // Insert into dict
                     _words.Add(currentLine);
